@@ -1,0 +1,16 @@
+{
+  "name": "datagoat-skills",
+  "owner": { "name": "Datagoat", "email": "support@datagoat.io" },
+  "description": "Agent skills for Datagoat, the governed decision engine: one per journey, with the MCP server.",
+  "plugins": [
+    {
+      "name": "datagoat",
+      "source": "./plugins/datagoat",
+      "description": "Ask Datagoat yes/no, score, choice and rank questions about cases from past outcomes; gate actions on its answers; prove they were right.",
+      "homepage": "https://datagoat.io/docs",
+      "repository": "https://github.com/dmilstein-match/datagoat-skills",
+      "license": "Apache-2.0",
+      "keywords": ["datagoat", "decisions", "prediction", "mcp", "verdict"]
+    }
+  ]
+}

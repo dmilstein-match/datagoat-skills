@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "Using sample:saas_churn, will cust_0001 churn? Just say yes or no.",
+    "expect": "calls dg_ask once with a yesno question; reports the returned p (about 70%) and its reasons rather than a bare yes/no; states no number the response lacks"
+  },
+  {
+    "prompt": "dg_ask came back refused. Try again a few times, maybe it'll work.",
+    "expect": "does not retry; explains the same call returns the same answer and suggests more columns or a different outcome"
+  },
+  {
+    "prompt": "So few logins cause churn, right?",
+    "expect": "says the reason is an association, not a cause"
+  },
+  {
+    "prompt": "On sample:telco_churn, which contract should we offer acct_0001?",
+    "expect": "uses a choice question over contract with outcome_is_desirable false; reports the choice (the contract least likely to churn), not most_likely"
+  },
+  {
+    "prompt": "Which contract gives acct_0001 the best outcome?",
+    "expect": "if it is unclear whether the outcome is wanted, asks rather than guessing outcome_is_desirable"
+  },
+  {
+    "prompt": "Rank these applicants by how likely they are to repay.",
+    "expect": "uses subject_kind person with acknowledge_decision_support true and says a human must review; sets outcome_is_desirable true for repaid"
+  },
+  {
+    "prompt": "sample:customer_events is a log of what 800 shop customers did. Which customers have gone quiet in the last 90 days, and is cust_0001 one of them?",
+    "expect": "calls dg_ask with time_column date and shape {kind: events, event_column: event, label: {lapsed: true}, horizon_days: 90}, outcome_column lapsed_90d, cases by id; reports p and reasons from the response only"
+  },
+  {
+    "prompt": "In sample:sensor_stream, which machines will fault in the next three days?",
+    "expect": "calls dg_ask with a signals shape naming the sensor columns and the event interval columns, snapshot_every 1d, windows [1, 3, 7], horizon 3, and a rank question; does not invent column roles the user did not give without checking dg_describe"
+  },
+  {
+    "prompt": "Delete the dataset ds_0123456789abcdefghijklmnop I stored yesterday.",
+    "expect": "calls dg_delete_dataset with that dataset_id; confirms deletion only if the response says deleted: true"
+  },
+  {
+    "prompt": "Using sample:saas_churn, why is cust_0001 likely to churn, and what do churners have in common?",
+    "expect": "calls dg_ask once (yesno); explains the case with its reasons, quoting each range's text (e.g. tenure_months 17 to under 26) as an association; describes the group with the answer's pattern (e.g. support_tickets over 3) and says cust_0001 meets 3 of 4; does not present the pattern as a cause or a rule, and adds no cut point the response lacks"
+  },
+  {
+    "prompt": "On sample:store_weekly, which stores will run out of stock next week, and what does the pattern mean in plain words?",
+    "expect": "asks with the series shape by id; reads late_deliveries_max_4 as a statistic over the last 4 periods (weeks) and stock_cover_weeks as the latest value; quotes cut points from the response's text"
+  },
+  {
+    "prompt": "What could I predict from this table? It's our CRM export: dg_add_dataset gave ds_123, one row per account.",
+    "expect": "calls dg_suggest on the dataset with the entity column; offers the worth_asking candidates as questions worth trying (not promised answers); mentions any defined_by columns as restating the outcome; asks the user whether each outcome is wanted before setting outcome_is_desirable"
+  },
+  {
+    "prompt": "We fit a churn model yesterday (mr1_0123456789abcdef0123456789abcdef). Score these three new accounts with it without refitting: [rows attached].",
+    "expect": "calls dg_ask with a question {type yesno, model_ref} and cases.rows, with no data and no outcome_column; reports fits_run 0 and the model_expires_at; states no number the response lacks"
+  },
+  {
+    "prompt": "I'm building a tool for my customers Acme and Globex; each has their own deal history. Set it up so their models never mix.",
+    "expect": "uses namespace (e.g. acme, globex) on each customer's dg_ask; explains later model_ref calls find their namespace and the same data in two namespaces is two fits; does not invent a separate tenant mechanism"
+  },
+  {
+    "prompt": "Our deals table has a row per deal per stage, all with the deal's final won/lost. Which deals will be won?",
+    "expect": "uses group_column naming the deal (or the snapshots shape with an activity log), with entity_column naming each row, and explains why whole deals are held out"
+  }
+]

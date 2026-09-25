@@ -1,0 +1,26 @@
+[
+  {
+    "prompt": "We score 40 customers' deal pipelines every morning. How do we keep one customer's model from answering for another?",
+    "expect": "one namespace per customer on dg_ask; a model answers only in its own namespace; later model_ref calls find the namespace themselves"
+  },
+  {
+    "prompt": "Do we have to refit every morning?",
+    "expect": "no: fit once, keep the model_ref, and score new cases from it (cases.rows or a newer record with cases.ids), which runs no fit"
+  },
+  {
+    "prompt": "The daily job got row_not_scoreable. What now?",
+    "expect": "sends every column in model_columns; the refusal names all missing columns at once"
+  },
+  {
+    "prompt": "dg_drift said no_check_yet. Should we extend the model?",
+    "expect": "no: nothing has been compared; refit with refit_of first and never renew on no_check_yet"
+  },
+  {
+    "prompt": "Our deals table has one row per deal per stage. Anything to watch out for?",
+    "expect": "name the case with group_column (or use the snapshots shape) so held-out accuracy is on whole deals the model never saw; build each row's features from what was known at that stage"
+  },
+  {
+    "prompt": "Include the cancellation_date column, it's very predictive.",
+    "expect": "warns it is written after the outcome is known, so it leaks the outcome; leaves it out"
+  }
+]

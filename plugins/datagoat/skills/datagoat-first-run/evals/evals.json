@@ -1,0 +1,22 @@
+[
+  {
+    "prompt": "Show me what Datagoat can do. I don't have data ready.",
+    "expect": "runs the tour on samples: one answered question (saas_churn), one refusal (deal_stages alone), the snapshots ask that answers, and a verification; quotes only numbers from the responses"
+  },
+  {
+    "prompt": "It refused the deal question. Can you try again?",
+    "expect": "does not retry; explains a refusal is the same every time and that adding the activity log through the snapshots shape is what changes the answer"
+  },
+  {
+    "prompt": "Prove to me that answer wasn't made up.",
+    "expect": "verifies the Verdict (dg_verify or the SDK's offline verifier) with verdict and signature exactly as received, and explains that a changed number fails verification"
+  },
+  {
+    "prompt": "So having more meetings makes a deal close?",
+    "expect": "says reasons and the pattern are associations, not causes"
+  },
+  {
+    "prompt": "OK, now try it on my spreadsheet.",
+    "expect": "hands over to the datagoat-ask flow: upload with dg_add_dataset (upload true for a file), then dg_suggest or dg_preflight before asking"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "prompt": "Can I check this Verdict without trusting Datagoat's server?",
+    "expect": "yes: the SDK's offline verifier checks the Ed25519 signature against the published keys; pass verdict and signature exactly as received"
+  },
+  {
+    "prompt": "Show that the model would have caught last quarter's failures.",
+    "expect": "proposes a walk-forward replay: fit only on data before a cutoff, score each later period from the model_ref and store the signed answer first, grade against outcomes only after the loop; states what the replay does not show"
+  },
+  {
+    "prompt": "We sent offers to the flagged accounts and fewer churned. So the offers work, right?",
+    "expect": "calls dg_evidence (after attest and outcome reports), reports the difference with its interval, and says the comparison is observational, not proof of cause"
+  },
+  {
+    "prompt": "dg_evidence came back with live null.",
+    "expect": "explains each group needs 30 outcomes; reports the progress counts"
+  },
+  {
+    "prompt": "Pull up the answer we got last week so I can audit it.",
+    "expect": "explains Datagoat keeps answers for 24 hours; the stored Verdict and signature from the time of the call are the record, and they can be verified now"
+  }
+]

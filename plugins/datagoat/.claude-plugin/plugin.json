@@ -1,0 +1,11 @@
+{
+  "name": "datagoat",
+  "displayName": "Datagoat",
+  "version": "1.0.0",
+  "description": "Ask Datagoat yes/no, score, choice and rank questions about cases from past outcomes; gate actions on its answers; prove they were right. Five skills, one per journey, and the MCP server.",
+  "author": { "name": "Datagoat", "email": "support@datagoat.io" },
+  "homepage": "https://datagoat.io/docs",
+  "repository": "https://github.com/dmilstein-match/datagoat-skills",
+  "license": "Apache-2.0",
+  "keywords": ["datagoat", "decisions", "prediction", "mcp", "verdict"]
+}

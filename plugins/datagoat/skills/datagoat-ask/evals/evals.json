@@ -58,5 +58,13 @@
   {
     "prompt": "Our deals table has a row per deal per stage, all with the deal's final won/lost. Which deals will be won?",
     "expect": "uses group_column naming the deal (or the snapshots shape with an activity log), with entity_column naming each row, and explains why whole deals are held out"
+  },
+  {
+    "prompt": "One of my customers came back with state not_scoreable. What chance did it give them?",
+    "expect": "gives no chance: a not_scoreable case has none; names the missing columns or unseen values from not_scoreable and says the other cases were answered"
+  },
+  {
+    "prompt": "It says not_yet but I have 6,000 rows. Why?",
+    "expect": "reads reasons and needs: rows are not the limit (needs.labeled_rows 0) and positives are; says how many more positives are needed and, with a time column, that they are missing from the later part of the record"
   }
 ]

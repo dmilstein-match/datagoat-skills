@@ -13,10 +13,14 @@
   },
   {
     "prompt": "It said not_yet. Just use p anyway.",
-    "expect": "does not act: not_yet has no usable chance; takes the fallback and says how many more labeled rows are needed"
+    "expect": "does not act: not_yet has no usable chance; takes the fallback and says what is short and how many more of it are needed, from needs"
   },
   {
     "prompt": "Wire this into an AgentFactory workflow.",
     "expect": "HTTP step to POST /v1/ask with band true, a router on state then band, human.approval before the acting step for act/L2, a channel message for escalate"
+  },
+  {
+    "prompt": "The answer is actionable but one case says not_scoreable. Send the discount to everyone.",
+    "expect": "sends nothing to the not_scoreable case (it has no chance) and names what it lacked; gates the others on band and max_autonomy as usual"
   }
 ]

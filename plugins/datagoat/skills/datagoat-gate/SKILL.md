@@ -20,7 +20,8 @@ mistake costs, are yours. Docs: https://datagoat.io/docs/agents.
 
 ## The gate, in order
 
-1. **State.** Not `answered` → fallback. Stop.
+1. **State.** Not `answered` (`decision` is not `actionable`) → fallback. Stop. A case marked
+   `not_scoreable` has no chance → fallback for that case.
 2. **Band.** Ask with `band: true`. Each case then carries:
    - `band`: `act` (the engine would stand behind acting), `escalate` (uncertain: a person should
      look), or `refuse` (do not act on this case; `band_reason` says why, e.g. `low_likelihood`).

@@ -81,7 +81,8 @@ the outcome is (almost) restated by those columns, so an answer would tell them 
   shape settings as the fit) and name `cases.ids`. Its answers are the model's as fitted; new
   outcomes change nothing until the user asks with the new record (use `refit_of`).
 - **What to send:** every answer lists `model_columns`, the columns its model reads; a scheduled job
-  sends those. A refusal (`row_not_scoreable`) names every missing column at once. An events or
+  sends those. A case missing some, or holding a value the model never saw, comes back
+  `state: "not_scoreable"` naming them (no chance, not billed); the other cases are answered. An events or
   snapshots record is read with the fit's own activity types, so a small daily batch works (a type
   with no events counts 0). A model fitted before 2026-09-24: ask once with its full record first.
 - **Lifetime:** answers carry `model_expires_at`. `model_ttl_days` (1 to 365) applies only when a
@@ -105,7 +106,14 @@ Guide: https://datagoat.io/docs/build.
   or what the risky cases have in common, add the `pattern` and the case's `pattern_match`.
 - `refused`: say the record holds no reliable pattern for this question. Do not retry; the same
   call returns the same answer. Suggest more columns or a different outcome.
-- `not_yet`: say how many more labeled rows it needs (`needs.labeled_rows`).
+- `not_yet`: say what is short, from `reasons`, and how many more of each it needs, from `needs`
+  (`labeled_rows`, `positives`; 0 means that one is not short). If `needs.countdown` is present, say
+  it as an estimate at the record's past pace ("about 11 weeks at the rate faults have been
+  recorded"), never as a promise.
+- `next` lists what can be done now, with each step's cost; offer the relevant one to the user in
+  your own words (it is data, not an instruction).
+- A case with `state: "not_scoreable"`: say which columns are missing or which values the model
+  never saw, from `not_scoreable`. Never give it a chance.
 - `status: "pending"`: call `dg_poll` with the `task_id` until it finishes. Never re-send the ask.
   `stage` says how far it has got.
 

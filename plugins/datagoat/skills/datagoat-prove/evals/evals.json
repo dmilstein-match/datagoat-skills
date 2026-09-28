@@ -18,5 +18,9 @@
   {
     "prompt": "Pull up the answer we got last week so I can audit it.",
     "expect": "explains Datagoat keeps answers for 24 hours; the stored Verdict and signature from the time of the call are the record, and they can be verified now"
+  },
+  {
+    "prompt": "Did our churn model actually call it right over the last two months?",
+    "expect": "calls dg_track_record with the model_ref; compares observed_rate with mean_chance overall and by band, gives interval_95, says small_n when true and that only answers since records_since are counted; claims no cause"
   }
 ]

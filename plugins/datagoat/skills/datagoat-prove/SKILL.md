@@ -1,6 +1,6 @@
 ---
 name: datagoat-prove
-description: Use when someone needs to show that Datagoat's answers were right, or that acting on them worked - "prove it", "did the model call it", "show the track record", "audit these decisions", "did the retention offers work". Covers verifying Verdicts (with dg_verify or offline, with no call to Datagoat), keeping each signed call from before the outcome, grading calls against what happened in a walk-forward replay, recording actions with dg_attest and outcomes with dg_report_outcomes, and reading dg_evidence without claiming cause.
+description: Use when someone needs to show that Datagoat's answers were right, or that acting on them worked - "prove it", "did the model call it", "show the track record", "audit these decisions", "did the retention offers work". Covers verifying Verdicts (with dg_verify or offline, with no call to Datagoat), keeping each signed call from before the outcome, grading calls against what happened in a walk-forward replay, recording actions with dg_attest and outcomes with dg_report_outcomes, reading dg_track_record (the model's calls against reported outcomes: calibration by band, level and chance) and reading dg_evidence without claiming cause.
 ---
 
 # Prove it
@@ -40,6 +40,15 @@ the record's `dataset_content_hash`, the engine's `core_hash`) and a `signature`
 
 The grading arithmetic is your own counting of outcomes against signed calls; say so when you show
 it.
+
+## 2b. The track record Datagoat keeps
+
+`dg_track_record` (free) with the `model_ref` sets the model's earlier calls against the outcomes
+reported with `dg_report_outcomes`: each outcome paired with the latest answer about that case given
+on or before the day it was observed. Read `overall`, then `by_band`, `by_level` and `by_chance`:
+`observed_rate` against `mean_chance` says whether the model's chances held up (near: calibrated),
+with `interval_95`. Say `small_n` plainly when it is true (under 100 calls). Say that answers are
+kept only from `records_since` on, and never call a match proof that acting caused anything.
 
 ## 3. Did acting work?
 

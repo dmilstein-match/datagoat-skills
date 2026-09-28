@@ -24,10 +24,14 @@ thresholds and the actions; Datagoat owns the numbers.
    `model_ref` find its namespace themselves.
 3. **Fit once.** The first ask on a record fits a model; `model_ttl_days` (1 to 365, default 90)
    sets how long it answers. Keep the answer's `model_ref` and `model_expires_at`.
+3b. **Give each customer a profile (optional).** `dg_profile` with the namespace: `words` (what a
+   case is called, the outcome in plain words, a phrase per column), `exclude` (columns no fit
+   there uses) and `display` (`chance`, or `bands` for end users). Answers there then carry
+   `profile {hash, display}` and a `says` sentence per case, quoted from the engine's values.
 4. **Score from the model.** A question `{"type": "yesno", "model_ref": "mr1_…"}` fits nothing.
    Send new cases as `cases.rows` (no `data` needed), or send today's record with the fit's shape
    settings and name `cases.ids`. Answers list `model_columns`: the columns a case must carry. A
-   case missing some is refused with every missing column named (`row_not_scoreable`).
+   case missing some, or holding a value the model never saw, comes back `not_scoreable` naming them.
    A test key (`dgk_test_…`) scores from the model only against a sample record (`cases.ids`);
    rows with no record are the caller's own data and need a live key.
 5. **Explain.** Each case's `reasons` (with `range.text`) explain its chance; the answer's
@@ -68,5 +72,6 @@ record: the scheduled job sends it (or the day's new rows) each time.
 
 ## Cost
 
-One decision per answered case; a fit the first time a record is asked about (1,000 free a month,
+One decision per answered case; a fit the first time a record is asked about, and on every
+`refit_of` question (1,000 free a month,
 then $0.01). A `model_ref` question runs no fit. Refusals and `not_yet` bill no decisions.

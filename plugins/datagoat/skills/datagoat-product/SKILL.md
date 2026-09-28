@@ -71,6 +71,20 @@ than it will be.
   `dg_extend_model` renews before expiry; an expired model is not revived.
 - **A customer leaves:** `dg_delete_model` removes the model and its outcome record now.
 
+## Watching fits and models
+
+- A scheduled job's first fit on a customer's record can run for minutes. Its pending answer
+  carries `watch_url` (a page with the stages as the engine reports them, then the answer, and no
+  rows) and its stages stream from `GET /v1/tasks/{task_id}/events`. Where the job or the host
+  has its own task list, the reported stages mirror into it one to one, each labelled with the
+  event's `message` word for word; a stage not yet reported is never shown or described, and
+  nothing about a finding appears before the answer.
+- On a long refit, the `watch_url` is the link to hand to whoever is waiting on it.
+- `dg_track_record` and `dg_drift` answers carry a `watch_url` too: a page with the model's
+  calibration (each band's observed rate against its mean chance, with the 95% interval, as
+  `by_band` gives them) and its drift check, valid 24 hours. With no outcomes reported yet, the
+  page says so and draws no chart.
+
 ## Data it keeps
 
 Inline rows are deleted when the call ends; a stored dataset 24 hours after its last use; a fitted

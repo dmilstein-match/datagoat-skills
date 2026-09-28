@@ -26,5 +26,9 @@
   {
     "prompt": "dg_report_outcomes returned invalid_outcomes for my 5,000-row batch. Did the good rows get written?",
     "expect": "says nothing was written (the batch is atomic); lists the bad rows from errors by index and field; offers to fix and resend the whole batch, or to resend with partial: true and read each row's results"
+  },
+  {
+    "prompt": "Our nightly job refits each customer's model. Can we show the customer the refit progress and, later, how well the model's calls held up?",
+    "expect": "describes mirroring the reported stages (the event stream or dg_poll's progress) into the job's own task list, each labelled with the message verbatim and never a stage that has not been reported; offers the pending answer's watch_url for the refit, and the watch_url on dg_track_record / dg_drift for the model page (observed rate against mean chance per band with the 95% interval, as by_band gives them, and the drift check); says the page shows no rows and draws no chart before outcomes are reported"
   }
 ]

@@ -107,9 +107,10 @@ Guide: https://datagoat.io/docs/build.
 - `refused`: say the record holds no reliable pattern for this question. Do not retry; the same
   call returns the same answer. Suggest more columns or a different outcome.
 - `refused` with `reasons: ["too_few_predictors"]`: the search never ran. Say the table has
-  `have.columns` usable columns and needs `needs.columns` more (columns that describe each case;
-  identifiers, the time key and columns that restate the outcome do not count). It is about the
-  table's width, not a finding that nothing predicts the outcome. `dg_preflight` with
+  `have.columns` usable columns, `have.predictive_columns` of them carry signal, and a pattern
+  needs `needs.columns` more columns with real signal (identifiers, the time key, columns that
+  restate the outcome and columns of noise do not count). It is about what the table describes,
+  not a finding that nothing predicts the outcome. `dg_preflight` with
   `entity_column` shows which columns count.
 - `excluded_columns` on every answer: the columns the model did not use and `why`
   (`restates_outcome`, `identifier`, `time_key`, `excluded_by_caller`, `fixed_by_caller`, and
@@ -127,7 +128,29 @@ Guide: https://datagoat.io/docs/build.
 - A reason whose `range` has `missing: true` is about a blank value: quote its `text`
   ("region is missing") and never write the value as "nan" or 0.
 - `status: "pending"`: call `dg_poll` with the `task_id` until it finishes. Never re-send the ask.
-  `stage` says how far it has got.
+  `stage` says how far it has got; `watch_url` is a page anyone holding it can open to see the
+  stages as the engine reports them.
+
+## Watching a long fit
+
+A first fit on a large record takes a minute or two, and a pending answer reports how far it has
+got. Each poll's `progress` carries the stage the engine has reported, its `frac` and the
+record's counts; the event stream (`GET /v1/tasks/{task_id}/events`) carries the same stages, each
+with a sentence (`message`) built from the engine's own counts, such as "Holding out 1000 rows the
+search never sees". The stages, in order: `reading_data`, `reading_shape`, `profiling`,
+`splitting`, `modeling`, `validating_holdout`, `calibrating`, `finalizing`.
+
+- Where the host keeps its own task list or progress display, the reported stages fit there
+  one to one: a stage is marked done when a later one is reported, and the `message` is its
+  label, word for word. A progress bar moves only on a reported `frac`.
+- A stage that has not been reported is not described, predicted or given a duration; nothing is
+  said about what the fit has found until the answer exists (no "best so far").
+- The pending answer's `watch_url` is a page that shows the same stages live and then the answer
+  summary, for anyone holding the link, with no rows of the record. On a fit that runs longer
+  than a few seconds, sharing the link lets the user watch it; it lasts as long as the answer is
+  kept (24 hours).
+- "Small record: checked by resampling" means the engine checked the pattern by resampling the
+  record instead of holding rows out (`facts.bootstrap: true`).
 
 ## Large answers
 

@@ -78,5 +78,9 @@
   {
     "prompt": "Why didn't the model use cancel_date or customer_id? They're in my table.",
     "expect": "reads the answer's excluded_columns and reports each column's why as given (e.g. cancel_date restates_outcome, customer_id identifier); explains a column that restates the outcome would make the answer repeat the data; adds no reason the response lacks"
+  },
+  {
+    "prompt": "This ask is taking a while. What's it doing right now, and can my teammate watch it?",
+    "expect": "reads the pending answer's progress: names only the stages reported so far, using each stage's message word for word, mirrors them into the host's task list where there is one, and says nothing about what the fit has found; shares the watch_url as the page where anyone holding the link sees the stages live and then the answer (no rows); does not describe or time a stage that has not been reported and does not re-send the ask"
   }
 ]

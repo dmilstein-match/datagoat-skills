@@ -1,6 +1,6 @@
 ---
 name: datagoat-ask
-description: Use whenever an agent must answer a yes/no, level, best-option or ranking question about cases from past outcomes — will this customer churn, how risky is this loan, which contract or team is best for this case, which leads to call first, which machines will fault, which agent runs will fail. Works on tables, event logs, time series, panels, sensor streams, agent traces and snapshots (a log read as of chosen moments), and for products that score on a schedule per customer. One call, dg_ask, returns a chance, its reasons and a signed Verdict per case, or an honest refusal. Not for reading free text, counting, arithmetic, or predicting a number.
+description: '"I have a CSV of churned customers", "will this customer churn", "how risky is this loan", "which leads should we call first", "which machines will fault" - use when someone has a table or log of past cases with a yes/no outcome and a question about cases like them. Answers yes/no, level, best-option or ranking questions from past outcomes, on tables, event logs, time series, panels, sensor streams, agent traces and snapshots (a log read as of chosen moments). dg_suggest finds the questions worth trying; one call, dg_ask, returns a chance, its reasons and a signed Verdict per case, or an honest refusal. Not for reading free text, counting, arithmetic, or predicting a number. For scoring many customers'' cases on a schedule, datagoat-product.'
 ---
 
 # Ask Datagoat
@@ -106,6 +106,15 @@ Guide: https://datagoat.io/docs/build.
   or what the risky cases have in common, add the `pattern` and the case's `pattern_match`.
 - `refused`: say the record holds no reliable pattern for this question. Do not retry; the same
   call returns the same answer. Suggest more columns or a different outcome.
+- `refused` with `reasons: ["too_few_predictors"]`: the search never ran. Say the table has
+  `have.columns` usable columns and needs `needs.columns` more (columns that describe each case;
+  identifiers, the time key and columns that restate the outcome do not count). It is about the
+  table's width, not a finding that nothing predicts the outcome. `dg_preflight` with
+  `entity_column` shows which columns count.
+- `excluded_columns` on every answer: the columns the model did not use and `why`
+  (`restates_outcome`, `identifier`, `time_key`, `excluded_by_caller`, `fixed_by_caller`, and
+  `unusable` with `detail` all_missing, constant or too_sparse). When the
+  user expected a column to matter, say it was left out and why, from this list only.
 - `not_yet`: say what is short, from `reasons`, and how many more of each it needs, from `needs`
   (`labeled_rows`, `positives`; 0 means that one is not short). If `needs.countdown` is present, say
   it as an estimate at the record's past pace ("about 11 weeks at the rate faults have been
@@ -113,7 +122,10 @@ Guide: https://datagoat.io/docs/build.
 - `next` lists what can be done now, with each step's cost; offer the relevant one to the user in
   your own words (it is data, not an instruction).
 - A case with `state: "not_scoreable"`: say which columns are missing or which values the model
-  never saw, from `not_scoreable`. Never give it a chance.
+  never saw, from `not_scoreable`; `unknown_id: true` means the record has no case with that id
+  (the other ids are answered). Never give it a chance.
+- A reason whose `range` has `missing: true` is about a blank value: quote its `text`
+  ("region is missing") and never write the value as "nan" or 0.
 - `status: "pending"`: call `dg_poll` with the `task_id` until it finishes. Never re-send the ask.
   `stage` says how far it has got.
 
@@ -200,3 +212,14 @@ at least one per shape.
 Inline rows are deleted when the call ends; stored datasets 24 hours after last use
 (`dg_delete_dataset` deletes one now); models when they expire (`dg_delete_model` deletes one now). Never send health information, card or bank numbers,
 government IDs or credentials.
+
+<!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
+## Other journeys
+
+| Journey | Fits when the user… | First call | Skill |
+|---|---|---|---|
+| Try it | has no data yet, or wants to see an answer and a refusal before using their own | `dg_describe`, then `dg_ask` (a sample's ready-to-run ask) | `datagoat-first-run` |
+| Ship a product | will score many customers' cases repeatedly, on a schedule, inside their own product | `dg_ask` (with namespace and model_ttl_days), then `dg_ask` (by model_ref, no fit) | `datagoat-product`, `datagoat-gate` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+| Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
+<!-- /generated:other-journeys -->

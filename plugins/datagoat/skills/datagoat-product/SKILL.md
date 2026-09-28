@@ -1,6 +1,6 @@
 ---
 name: datagoat-product
-description: Use when building or running a product that asks Datagoat about its own customers' cases on a schedule - score every open deal each morning, flag accounts likely to churn this month, rank machines likely to fault this week - and when keeping it healthy afterwards. Covers one namespace per customer, fitting once and scoring from the model with no fit, what a scheduled job must send, building each case's features from what was known at that moment, reporting outcomes, refitting with refit_of, reading dg_drift, and renewing or retiring models. For a single question on one table, use datagoat-ask.
+description: '"Score my customers nightly", "flag the accounts likely to churn each week", "one model per customer", "is the model still any good" - use when building or running a product that asks Datagoat about its own customers'' cases on a schedule - score every open deal each morning, rank machines likely to fault this week - and when keeping it healthy afterwards. Covers one namespace per customer, fitting once and scoring from the model with no fit, what a scheduled job must send, building each case''s features from what was known at that moment, reporting outcomes, refitting with refit_of, reading dg_drift, and renewing or retiring models. For a single question on one table, datagoat-ask.'
 ---
 
 # Ship and run a product on Datagoat
@@ -26,8 +26,10 @@ thresholds and the actions; Datagoat owns the numbers.
    sets how long it answers. Keep the answer's `model_ref` and `model_expires_at`.
 3b. **Give each customer a profile (optional).** `dg_profile` with the namespace: `words` (what a
    case is called, the outcome in plain words, a phrase per column), `exclude` (columns no fit
-   there uses) and `display` (`chance`, or `bands` for end users). Answers there then carry
-   `profile {hash, display}` and a `says` sentence per case, quoted from the engine's values.
+   there uses), `fixed` (columns an action never changes, such as tenure: still read, no lever
+   offered) and `display` (`chance`, or `bands` for end users, which also turns bands on). Answers
+   there then carry `profile {hash, display}` and a `says` sentence per case ("customer n4 — chance
+   it cancels: 0.5 (likely)"), quoted from the engine's values.
 4. **Score from the model.** A question `{"type": "yesno", "model_ref": "mr1_…"}` fits nothing.
    Send new cases as `cases.rows` (no `data` needed), or send today's record with the fit's shape
    settings and name `cases.ids`. Answers list `model_columns`: the columns a case must carry. A
@@ -53,7 +55,12 @@ than it will be.
 ## Run it
 
 - **Report outcomes** as you learn them: `dg_report_outcomes` with the `model_ref` and
-  `{entity_id, outcome, observed_at}` rows; give each an `event_id` so a retry is safe.
+  `{entity_id, outcome, observed_at}` rows; give each an `event_id` so a retry is safe. A batch
+  is written whole or not at all: on `invalid_outcomes`, fix the rows its `errors` name (by
+  `index` and `field`) and resend the batch, or send `partial: true` to write the valid rows now
+  and read each row's `results`.
+- **A model_ref stops answering** with `model_deleted` or `model_expired` (410): ask again with
+  the record to fit a new model, and switch the job to the new `model_ref`.
 - **Refit on a schedule** with the new record and `refit_of: "<old model_ref>"`, then read
   `dg_drift` for the new model:
   - `keep` → `dg_extend_model` on the model you keep, and carry on;
@@ -75,3 +82,13 @@ record: the scheduled job sends it (or the day's new rows) each time.
 One decision per answered case; a fit the first time a record is asked about, and on every
 `refit_of` question (1,000 free a month,
 then $0.01). A `model_ref` question runs no fit. Refusals and `not_yet` bill no decisions.
+
+<!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
+## Other journeys
+
+| Journey | Fits when the user… | First call | Skill |
+|---|---|---|---|
+| Try it | has no data yet, or wants to see an answer and a refusal before using their own | `dg_describe`, then `dg_ask` (a sample's ready-to-run ask) | `datagoat-first-run` |
+| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true for a file a person holds), then `dg_suggest` | `datagoat-ask` |
+| Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
+<!-- /generated:other-journeys -->

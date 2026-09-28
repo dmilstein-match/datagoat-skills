@@ -66,5 +66,17 @@
   {
     "prompt": "It says not_yet but I have 6,000 rows. Why?",
     "expect": "reads reasons and needs: rows are not the limit (needs.labeled_rows 0) and positives are; says how many more positives are needed and, with a time column, that they are missing from the later part of the record"
+  },
+  {
+    "prompt": "dg_ask refused my churn question with reasons too_few_predictors. So nothing predicts churn?",
+    "expect": "says the search never ran: the table has have.columns usable columns and needs needs.columns more; it is not a finding that nothing predicts churn; suggests adding columns that describe each customer (not ids, dates or columns that restate the outcome) and dg_preflight with entity_column to see which count; does not retry the same call"
+  },
+  {
+    "prompt": "My table has only 300 rows and dg_ask says not_yet. Is that a refusal?",
+    "expect": "says not_yet is not a refusal: the record is too small to check a model; quotes reasons and needs (labeled_rows and positives) and, when present, the countdown as an estimate; suggests asking again when the record holds what needs names"
+  },
+  {
+    "prompt": "Why didn't the model use cancel_date or customer_id? They're in my table.",
+    "expect": "reads the answer's excluded_columns and reports each column's why as given (e.g. cancel_date restates_outcome, customer_id identifier); explains a column that restates the outcome would make the answer repeat the data; adds no reason the response lacks"
   }
 ]

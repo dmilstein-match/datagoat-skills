@@ -8,8 +8,8 @@
     "expect": "no: fit once, keep the model_ref, and score new cases from it (cases.rows or a newer record with cases.ids), which runs no fit"
   },
   {
-    "prompt": "The daily job got row_not_scoreable. What now?",
-    "expect": "sends every column in model_columns; the refusal names all missing columns at once"
+    "prompt": "Some cases in the daily job came back not_scoreable. What now?",
+    "expect": "reads not_scoreable.missing_columns and unseen_values, sends every column in model_columns, and never gives those cases a chance"
   },
   {
     "prompt": "dg_drift said no_check_yet. Should we extend the model?",
@@ -22,5 +22,9 @@
   {
     "prompt": "Include the cancellation_date column, it's very predictive.",
     "expect": "warns it is written after the outcome is known, so it leaks the outcome; leaves it out"
+  },
+  {
+    "prompt": "dg_report_outcomes returned invalid_outcomes for my 5,000-row batch. Did the good rows get written?",
+    "expect": "says nothing was written (the batch is atomic); lists the bad rows from errors by index and field; offers to fix and resend the whole batch, or to resend with partial: true and read each row's results"
   }
 ]

@@ -1,6 +1,6 @@
 ---
 name: datagoat-prove
-description: Use when someone needs to show that Datagoat's answers were right, or that acting on them worked - "prove it", "did the model call it", "show the track record", "audit these decisions", "did the retention offers work". Covers verifying Verdicts (with dg_verify or offline, with no call to Datagoat), keeping each signed call from before the outcome, grading calls against what happened in a walk-forward replay, recording actions with dg_attest and outcomes with dg_report_outcomes, reading dg_track_record (the model's calls against reported outcomes: calibration by band, level and chance) and reading dg_evidence without claiming cause.
+description: '"Prove the model was right", "did the model call it", "show the track record", "audit these decisions", "did the retention offers work" - use when someone needs to show that Datagoat''s answers were right, or that acting on them worked. Covers verifying Verdicts (with dg_verify or offline, with no call to Datagoat), keeping each signed call from before the outcome, grading calls against what happened in a walk-forward replay, recording actions with dg_attest and outcomes with dg_report_outcomes, reading dg_track_record (the model''s calls against reported outcomes: calibration by band, level and chance) and reading dg_evidence without claiming cause.'
 ---
 
 # Prove it
@@ -48,13 +48,22 @@ reported with `dg_report_outcomes`: each outcome paired with the latest answer a
 on or before the day it was observed. Read `overall`, then `by_band`, `by_level` and `by_chance`:
 `observed_rate` against `mean_chance` says whether the model's chances held up (near: calibrated),
 with `interval_95`. Say `small_n` plainly when it is true (under 100 calls). Say that answers are
-kept only from `records_since` on, and never call a match proof that acting caused anything.
+kept only from `records_since` on, that `choice` answers are not kept, and that a `rank` keeps only its
+top `top_k` (so its `by_chance` leans high); never call a match proof that acting caused anything.
 
 ## 3. Did acting work?
 
 - When you act on a case through one of its `levers`, record it: `dg_attest` with `model_ref`,
   `entity_id`, the lever's `lever_token` exactly as given, `post_value`, `acted_at`, and an
-  `event_id` so a retry is safe. It returns `compliant` and `dose_fraction`; report them as given.
+  `event_id` so a retry is safe. It returns `compliant`, `dose_fraction` and `lever {feature}`, the
+  lever the token belongs to; report them as given. Each lever has its own `lever_token`: use the
+  token of the lever that was pulled, never another lever's.
+- A lever on a category carries `to_one_of`: the values that count as acting on it. Tell the user
+  the action is compliant only when the new value is one of them. A lever with
+  `lever_advisory: "time_like"` is on a column an action rarely changes (tenure, age); say so, and
+  mention the profile's `fixed`, which stops levers on such columns.
+- `dg_evidence` leaves a case acted on only with non-compliant actions out of both groups and
+  counts it as `n_attempted_noncompliant`: an attempt that missed the target is not "acted".
 - Report outcomes as they arrive: `dg_report_outcomes` (`{entity_id, outcome, observed_at,
   event_id}` rows).
 - `dg_evidence` compares cases acted on with cases not acted on. `live` is null until each group
@@ -63,3 +72,14 @@ kept only from `records_since` on, and never call a match proof that acting caus
 
 Writing outcomes and attestations needs the "Can report outcomes" capability (a person signed in
 through an MCP host has it; an API key has it when created with it).
+
+<!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
+## Other journeys
+
+| Journey | Fits when the user… | First call | Skill |
+|---|---|---|---|
+| Try it | has no data yet, or wants to see an answer and a refusal before using their own | `dg_describe`, then `dg_ask` (a sample's ready-to-run ask) | `datagoat-first-run` |
+| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true for a file a person holds), then `dg_suggest` | `datagoat-ask` |
+| Ship a product | will score many customers' cases repeatedly, on a schedule, inside their own product | `dg_ask` (with namespace and model_ttl_days), then `dg_ask` (by model_ref, no fit) | `datagoat-product`, `datagoat-gate` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+<!-- /generated:other-journeys -->

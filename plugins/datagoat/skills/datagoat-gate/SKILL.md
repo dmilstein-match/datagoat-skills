@@ -1,6 +1,6 @@
 ---
 name: datagoat-gate
-description: Use when an agent or workflow will ACT on a Datagoat answer - send an offer, open a ticket, reassign a lead, block a run, message a customer - and must decide what it may do alone, what needs a person, and what to leave. Builds the gate - state first, then the engine's band (act, escalate, refuse) and max_autonomy, then your own thresholds - and places the human approval before the side effect so a retry never acts twice. Examples for AgentFactory, LangGraph and n8n. For asking the question itself, use datagoat-ask.
+description: '"Only act when it''s sure", "send the offer automatically", "who approves this", "wire it into our workflow" - use when an agent or workflow will ACT on a Datagoat answer - send an offer, open a ticket, reassign a lead, block a run, message a customer - and must decide what it may do alone, what needs a person, and what to leave. Builds the gate - state first, then the engine''s band (act, escalate, refuse) and max_autonomy, then your own thresholds - and places the human approval before the side effect so a retry never acts twice. Examples for AgentFactory, LangGraph and n8n. For asking the question itself, datagoat-ask.'
 ---
 
 # Gate an action on a Datagoat answer
@@ -75,3 +75,14 @@ elif case["band"] == "escalate":
 HTTP Request (`POST https://api.datagoat.io/v1/ask`, `band: true`) → IF on `state` → Switch on
 `band` → a Wait node ("resume on webhook") for approval → the acting node, whose request carries
 the idempotency key.
+
+<!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
+## Other journeys
+
+| Journey | Fits when the user… | First call | Skill |
+|---|---|---|---|
+| Try it | has no data yet, or wants to see an answer and a refusal before using their own | `dg_describe`, then `dg_ask` (a sample's ready-to-run ask) | `datagoat-first-run` |
+| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true for a file a person holds), then `dg_suggest` | `datagoat-ask` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+| Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
+<!-- /generated:other-journeys -->

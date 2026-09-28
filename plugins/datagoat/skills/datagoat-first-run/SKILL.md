@@ -1,6 +1,6 @@
 ---
 name: datagoat-first-run
-description: Use when someone wants to see what Datagoat does before using their own data — "show me Datagoat", "try it", "what can it do", "demo it on the samples". Walks the free samples in about five minutes - one answered question with its reasons, one question it refuses and why, the same data answering once an activity log is added, and a Verdict verified - so the person sees an answer, a refusal and a proof. Needs no card and no account beyond a free test key. For their own data, hand over to datagoat-ask.
+description: '"Show me Datagoat", "what can you do", "try it on a sample", "demo it" - use when someone has no data of their own yet, or wants to see an answer and a refusal before using theirs. Walks the free samples in about five minutes - one answered question with its reasons, one question it refuses and why, the same data answering once an activity log is added, and a Verdict verified - so the person sees an answer, a refusal and a proof. Needs no card and no account beyond a free test key. For their own table, hand over to datagoat-ask.'
 ---
 
 # First run on the free samples
@@ -76,3 +76,14 @@ again: `invalid_signature`. Anyone can do this without Datagoat: the SDKs' `veri
 - Their own data: the `datagoat-ask` skill (upload, `dg_suggest`, `dg_preflight`, ask).
 - A product on a schedule: `datagoat-product`. An agent that acts on answers: `datagoat-gate`.
 - Docs: https://datagoat.io/docs/quickstart
+
+<!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
+## Other journeys
+
+| Journey | Fits when the user… | First call | Skill |
+|---|---|---|---|
+| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true for a file a person holds), then `dg_suggest` | `datagoat-ask` |
+| Ship a product | will score many customers' cases repeatedly, on a schedule, inside their own product | `dg_ask` (with namespace and model_ttl_days), then `dg_ask` (by model_ref, no fit) | `datagoat-product`, `datagoat-gate` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+| Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
+<!-- /generated:other-journeys -->

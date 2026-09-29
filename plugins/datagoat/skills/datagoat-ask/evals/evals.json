@@ -64,12 +64,16 @@
     "expect": "gives no chance: a not_scoreable case has none; names the missing columns or unseen values from not_scoreable and says the other cases were answered"
   },
   {
+    "prompt": "In my acme namespace most cases came back with a says sentence, but customer c_ood has refused: true and no says. What is its chance of cancelling?",
+    "expect": "says the engine declined that case (refused: true) and gives its refused_reason; does not present its p or p_display as the chance it cancels or write a says sentence for it; says the other cases' says sentences stand"
+  },
+  {
     "prompt": "It says not_yet but I have 6,000 rows. Why?",
     "expect": "reads reasons and needs: rows are not the limit (needs.labeled_rows 0) and positives are; says how many more positives are needed and, with a time column, that they are missing from the later part of the record"
   },
   {
     "prompt": "dg_ask refused my churn question with reasons too_few_predictors. So nothing predicts churn?",
-    "expect": "says the search never ran: the table has have.columns usable columns and needs needs.columns more; it is not a finding that nothing predicts churn; suggests adding columns that describe each customer (not ids, dates or columns that restate the outcome) and dg_preflight with entity_column to see which count; does not retry the same call"
+    "expect": "says the search never ran: the table has have.columns usable columns and needs needs.columns more; it is not a finding that nothing predicts churn; suggests adding columns that describe each customer (not ids, dates or columns that restate the outcome) and dg_map on the table to see which count (or with an activity log, a record with more columns per case), not the deprecated dg_preflight; does not retry the same call"
   },
   {
     "prompt": "My table has only 300 rows and dg_ask says not_yet. Is that a refusal?",
@@ -82,5 +86,41 @@
   {
     "prompt": "This ask is taking a while. What's it doing right now, and can my teammate watch it?",
     "expect": "reads the pending answer's progress: names only the stages reported so far, using each stage's message word for word, mirrors them into the host's task list where there is one, and says nothing about what the fit has found; shares the watch_url as the page where anyone holding the link sees the stages live and then the answer (no rows); does not describe or time a stage that has not been reported and does not re-send the ask"
+  },
+  {
+    "prompt": "Just give me the churn chance for cust_0001 as a percentage, rounded.",
+    "expect": "gives the case's p_display exactly as the answer writes it (for example \"15%\", or \"<1%\" / \">99%\" at the ends) and does not round or reformat p itself; when the case has no p_display, quotes p as returned rather than inventing a percentage; adds no chance, reason or level the response lacks"
+  },
+  {
+    "prompt": "I have two exports: parley_events.csv (a log of what each account did) and parley_billing.csv (one row per account). Which accounts will cancel in the next 90 days?",
+    "expect": "stores both with dg_add_dataset and calls dg_map with both sources, outcome_words like cancel and a 90-day horizon; when the proposal carries questions, puts each to the user with its options and why and waits for their choice rather than choosing; sends the answers back to confirm, then adds subject_kind to the returned ask and calls dg_ask; reports counts only from record"
+  },
+  {
+    "prompt": "dg_map asked which column names each account in parley_tickets: account_id or user_id. Just pick whichever looks right and carry on.",
+    "expect": "does not pick; explains the choice is what the record means and only the user knows it, presents both options with the proposal's why, and asks the user to choose; mentions that an answer not among the options would be refused (mapping_answers_incomplete)"
+  },
+  {
+    "prompt": "Here is our login log (account_id, ts, event). Which accounts will go quiet in the next 90 days? Ask about all of them as they are today.",
+    "expect": "uses dg_ask with shape kind snapshots and no snapshot table: snapshot_every (e.g. 4w), horizon {value: 90, unit: days}, label {lapsed: true}, time_column ts, and outcome_column lapsed_90d; asks about today's cases with cases {open: true} rather than listing ids; reports quality.record's labelled and open counts as what the fit was measured on, and never counts an open (not yet known) row as a no"
+  },
+  {
+    "prompt": "dg_suggest on my table says plan = basic is not worth asking. Why not, and would more rows fix it?",
+    "expect": "reads the candidate's code (e.g. no_separating_signal) and facts (rows, positives, prevalence) as the response gives them; says no single column separates the outcome rather than that it lacks rows, unless the code is too_few_positives; quotes no number the response lacks and invents no reason beyond the code and why_not"
+  },
+  {
+    "prompt": "My snapshots record of the event log came back refused at 90 days. Just try 30 and 60 days too and tell me whichever works.",
+    "expect": "does not loop through horizons; reads horizons_tried (each horizon, its label and state) and have.arms_found as the response gives them and presents them with next (dg_map with a log, dg_ask at another horizon) for the user to choose; picks no horizon itself and quotes no number the response lacks"
+  },
+  {
+    "prompt": "dg_map confirmed our events and billing into a record. Before we score today's accounts, would this have worked last year?",
+    "expect": "calls dg_backtest with the confirm's dataset_id and subject_kind, polls the pending task with dg_poll rather than re-sending it, reports decision, summary and the cutoffs' states exactly as returned beside the baseline, verifies the backtest Verdict, and then offers the confirm's ask for today's open cases"
+  },
+  {
+    "prompt": "I have a 40 MB orders.csv.gz on my laptop and I'm in Claude. How do I get it into Datagoat so you can tell me which customers will churn?",
+    "expect": "calls dg_add_dataset with upload: true and gives the user the upload card (or upload_page where no card shows) for the .csv.gz as it is, without asking them to decompress it; once the card or the user reports the dataset_id, asks about that dataset_id; says dg_suggest cannot list questions for a gzip or Parquet file (profile_unavailable), so it asks with the churn column the user names; does not send the file's rows inline or invent the rows and columns (they are null until the engine reads the file)"
+  },
+  {
+    "prompt": "My agent runs in a sandbox that can only reach api.datagoat.io. It has a 15 MB leads.csv. How does it upload it?",
+    "expect": "uses the SDK's upload_file / uploadFile or `datagoat upload leads.csv`, which send the file in pieces to upload_pieces_url on api.datagoat.io only; does not use upload_url (the presigned storage host is unreachable there) or fetch_url; asks about the returned dataset_id"
   }
 ]

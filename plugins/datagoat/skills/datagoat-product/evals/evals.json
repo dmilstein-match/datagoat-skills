@@ -30,5 +30,21 @@
   {
     "prompt": "Our nightly job refits each customer's model. Can we show the customer the refit progress and, later, how well the model's calls held up?",
     "expect": "describes mirroring the reported stages (the event stream or dg_poll's progress) into the job's own task list, each labelled with the message verbatim and never a stage that has not been reported; offers the pending answer's watch_url for the refit, and the watch_url on dg_track_record / dg_drift for the model page (observed rate against mean chance per band with the 95% interval, as by_band gives them, and the drift check); says the page shows no rows and draws no chart before outcomes are reported"
+  },
+  {
+    "prompt": "We refitted Acme's churn model on this month's data and dg_drift says the pattern changed, but recommendation is keep with note_code refit_worse. Which model should the nightly job use now?",
+    "expect": "keeps the nightly job on the model keep_model_ref names (the earlier one), because the refit measured worse on held-out cases (refit_quality worse), and renews that model with dg_extend_model; does not switch to the refit's model_ref because the pattern changed; quotes note rather than computing or comparing lifts itself; if keep_model_ref is null, says the earlier model can no longer answer and a fit on the record is needed"
+  },
+  {
+    "prompt": "Each customer sends us their event log and an accounts table. Can our product build the record automatically and skip the mapping questions?",
+    "expect": "uses dg_map per customer; takes single survivors as proposed but surfaces each question (with its options and why) to the customer rather than answering it in the product's code; notes the confirm's mapping_id can be replayed and that fetch_url sources are refetched on replay, with closed_since returning the outcomes to report"
+  },
+  {
+    "prompt": "Our accounts log and billing table are mapped from two https URLs (mapping mp_…). Keep it answered every month: refit, check drift, score the open accounts and report what happened.",
+    "expect": "calls dg_schedule with the mapping_id, cadence monthly and subject_kind (with a live key that can report outcomes) rather than a hand-built loop; returns the schedule_id, next_run_at and the first run's watch_url; explains that each run refits with refit_of, reads dg_drift and follows the fixed policy (keep renews to the day after the next run, refit switches, abandon stops), that an unchanged record skips the fit, and that dg_describe's schedules[] shows the last run; quotes no count the response lacks"
+  },
+  {
+    "prompt": "We uploaded the CSVs through the upload page and mapped them. Schedule it weekly.",
+    "expect": "does not re-upload on a timer or pick another route silently; reads schedule_sources_not_refetchable as a schedule needing every source to be a fetch_url, and offers to map the same files by URL (dg_map with fetch_url sources) and schedule that mapping, or to run the loop by hand with dg_map mapping_id and dg_ask"
   }
 ]

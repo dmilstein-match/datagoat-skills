@@ -22,7 +22,10 @@ answer's status.
 
 **Rule you must never break:** never state a chance, level, reason, range, cut point or direction
 the response does not contain. Rephrase; never author. Quote numbers from `text` or the number
-fields, never round them further in a way that changes which side of a line a value is on.
+fields, never round them further in a way that changes which side of a line a value is on. Say a
+case's chance as its `p_display` ("15%", "<1%", ">99%"), word for word, not a rounding of `p` of
+your own; in a namespace with a profile, each case's `says` already quotes it. A case the engine
+declined (`refused: true`) has no `says`: give its `refused_reason`, not its `p` as a chance.
 
 ## Pick the question type
 
@@ -57,11 +60,45 @@ cases by id:
 | periods per case, outcome = a trend | `{"kind": "panel", "label": {"trend_of": "usage", "direction": "down"}}` |
 | sensor readings plus fault intervals | `{"kind": "signals", "signal_columns": [...], "event_column": "event_type", "event_start_column": "event_start", "snapshot_every": "1d", "windows": [1, 3, 7], "horizon": 3}` |
 | a log of agent runs with a 0/1 outcome | `{"kind": "traces", "agent_column": "agent", "task_column": "task", "tool_column": "tool"}` |
+| an event log, and a question about the next N days asked of every case every period ("who cancels in the next 90 days") | `{"kind": "snapshots", "snapshot_every": "4w", "horizon": {"value": 90, "unit": "days"}, "label": {"lapsed": true}, "event_column": "event"}` (or `outcome_time_column` instead of `label`); the outcome column is then `lapsed_90d`, and `cases: {"open": true}` asks about every case today |
 | an event log, judged at moments the user chooses (a deal at each stage) | `{"kind": "snapshots", "snapshots": {"dataset_id": "…"}, "snapshot_id_column": "snapshot_id", "snapshot_time_column": "entered_at", "event_column": "activity"}`; the outcome is a column of the snapshot table, and cases are snapshot ids |
 
 A table with several rows for one case (the same deal at each stage, each with that deal's
 outcome) needs `group_column` naming the case, or its held-out quality numbers look better than
-they are. The snapshots shape does this itself.
+they are. The snapshots shape does this itself. When the outcome is blank on some rows (not known
+yet), an answer's `quality.record` says how many labelled and open rows the fit was measured on:
+report those, never the whole row count.
+
+## Logs, or logs with a table: map them first
+
+When the user has an event log (logins, invoices, tickets), perhaps beside a table of accounts,
+and no outcome column yet, `dg_map` (free) builds the record: store each source with
+`dg_add_dataset`, then call `dg_map` with `sources` (each a `dataset_id` or `fetch_url`),
+`outcome_words` in the user's words ("cancel"), and, when the user has said them, `horizon`
+(1, 7, 30, 60 or 90 days) and `snapshot_every` (1d, 1w, 4w).
+
+- **Present the questions, never pick.** The proposal's `questions` holds one entry per slot
+  where two or more candidates survive (which column names a case, which event is the outcome,
+  which column joins the table). Put each to the user with its `options` and `why`, and send
+  their choice back as `answers` (`entity`/`time_column`: `[{source, column}]`, `join`:
+  `{table, right_key}`, `outcome`: `{offer_id}`). Never choose an option yourself, even the first
+  or the likeliest-sounding; `answers: {}` only when `questions` is empty.
+- `status: "empty"`: say what `empty_reason` says the sources lack; `not_runnable`: the chosen
+  outcome did not pass its gate at this horizon, so offer the other offers or another horizon
+  (a record is read at three horizons at most; never try horizons until one clears).
+- A confirm returns `mapping_id`, `dataset_id`, `record` and a ready-to-run `ask` on today's open
+  cases: add `subject_kind` (ask the user if it is unclear who the cases are) and send it with
+  `dg_ask`. Report the record's counts from `record` only (labelled and open cases, positives).
+- A single table needs no mapping; `dg_map` on one still adds preflight's report.
+- **Before the ask, the record's own past:** a record built from a log can be walked forward with
+  `dg_backtest` (`data.dataset_id` from the confirm, `subject_kind`): a fit at each past cutoff on
+  what was known then, graded on what came next beside a naive baseline. It answers pending: poll
+  `dg_poll` with its `task_id`, never re-send. Report `decision`, `summary` and each cutoff's
+  `state` as returned, check its Verdict (kind `backtest`) with `dg_verify`, and call it history,
+  not a call about today's cases (that is the `ask`). A table alone is `dataset_not_built`.
+  Guide: https://datagoat.io/docs/backtest.
+
+Guide: https://datagoat.io/docs/map.
 
 `dg_describe` has a ready-to-run ask for each on a free sample. Details: https://datagoat.io/docs/shapes.
 
@@ -70,7 +107,10 @@ they are. The snapshots shape does this itself.
 `dg_suggest` (free, fits nothing) lists a table's yes/no questions. Offer the ones with
 `worth_asking: true`, each with its ready `question`. It is a screen: about half of what it passes
 is answered, so say "worth trying", not "will answer". When `defined_by` is not empty, tell the user
-the outcome is (almost) restated by those columns, so an answer would tell them little.
+the outcome is (almost) restated by those columns, so an answer would tell them little. A candidate
+not worth asking carries the engine's `code` (e.g. `no_separating_signal`, `prevalence_out_of_band`,
+`too_few_positives`) and `facts` (rows, positives, prevalence) beside `why_not`: quote them as given
+and add no reason of your own.
 
 ## Building a product on it
 
@@ -89,7 +129,7 @@ the outcome is (almost) restated by those columns, so an answer would tell them 
   fit runs; `dg_extend_model` renews, `dg_delete_model` removes. `model_ref_missing` means expired,
   deleted, or another namespace: ask with the record to fit again.
 - **Drift, not the lifetime, says whether a model is still good:** refit on a schedule with
-  `refit_of`; on `keep` call `dg_extend_model`, on `refit` switch to the new `model_ref`, on `abandon`
+  `refit_of`; on `keep` call `dg_extend_model` on `keep_model_ref`, on `refit` switch to the new `model_ref`, on `abandon`
   stop using the question. `no_check_yet` means nothing has been compared: refit first, never renew
   on it. The lifetime is a privacy limit and a safety net.
 - **Say how accuracy was measured:** `quality.held_out.whole_cases_by` means every row of one case
@@ -106,12 +146,19 @@ Guide: https://datagoat.io/docs/build.
   or what the risky cases have in common, add the `pattern` and the case's `pattern_match`.
 - `refused`: say the record holds no reliable pattern for this question. Do not retry; the same
   call returns the same answer. Suggest more columns or a different outcome.
+- A refused or `not_yet` answer carries facts, never a pick: `have.arms_found` (the candidate
+  conditions the search found; a pattern needs 4) and, on a record read from a log,
+  `horizons_tried` (each horizon the source was read at, with this question's state there:
+  answered, refused, not_yet or not_asked). Present them and the answer's `next` (`dg_map` with a
+  log, the same question at another horizon) to the user; never pick a horizon or a log yourself,
+  and never try horizons until one clears (three per source at most).
 - `refused` with `reasons: ["too_few_predictors"]`: the search never ran. Say the table has
   `have.columns` usable columns, `have.predictive_columns` of them carry signal, and a pattern
   needs `needs.columns` more columns with real signal (identifiers, the time key, columns that
   restate the outcome and columns of noise do not count). It is about what the table describes,
-  not a finding that nothing predicts the outcome. `dg_preflight` with
-  `entity_column` shows which columns count.
+  not a finding that nothing predicts the outcome. `dg_map` on the table shows which columns
+  count (`resolutions`, `excluded_columns`); with an activity log it builds a record with more
+  columns per case. `dg_preflight` is deprecated (removed at contract 2.0.0).
 - `excluded_columns` on every answer: the columns the model did not use and `why`
   (`restates_outcome`, `identifier`, `time_key`, `excluded_by_caller`, `fixed_by_caller`, and
   `unusable` with `detail` all_missing, constant or too_sparse). When the
@@ -164,9 +211,15 @@ as JSON, Verdicts included. For bulk scoring in code, the REST API returns whole
 ## The user's own file
 
 To use a file the user has, call `dg_add_dataset` with `upload: true` and give them
-`upload_page`, a link to open in their browser (CSV up to 250 MB; the link lasts one hour). When
-they say it's done, ask about the returned `dataset_id`. Small tables can go inline as `rows` or
-`csv` instead.
+`upload_page`, a link to open in their browser (CSV up to 250 MB; the link lasts one hour). In a
+host that shows MCP Apps (Claude, ChatGPT), the same call also shows the upload card, where they
+choose the file in the conversation and the card reports the `dataset_id`. In ChatGPT, a file the
+user attached to the conversation can go straight in as `dg_add_dataset`'s `file`. When they say
+it's done, ask about the returned `dataset_id`. Small tables can go inline as `rows` or
+`csv` instead. Code that can reach only `api.datagoat.io` (a sandbox) sends the file in pieces to
+`upload_pieces_url`; the SDKs' `upload_file` / `uploadFile` and `datagoat upload FILE` do that.
+A `.csv.gz` or Parquet file works everywhere a CSV does; Datagoat does not read it, so
+`dg_suggest` cannot list its questions (`profile_unavailable`): ask with the columns the user names.
 
 ## Report reasons and the pattern faithfully
 
@@ -220,7 +273,7 @@ https://datagoat.io/skills/<name>/SKILL.md.
 
 ## Docs
 
-https://datagoat.io/docs/introduction (start), /docs/ask-your-data, /docs/questions, /docs/answers,
+https://datagoat.io/docs/introduction (start), /docs/ask-your-data, /docs/map, /docs/questions, /docs/answers,
 /docs/shapes, /docs/build (ship a product), /docs/patterns, /docs/limits, /docs/ask (every field),
 /docs/errors (every error code).
 
@@ -243,6 +296,6 @@ government IDs or credentials.
 |---|---|---|---|
 | Try it | has no data yet, or wants to see an answer and a refusal before using their own | `dg_describe`, then `dg_ask` (a sample's ready-to-run ask) | `datagoat-first-run` |
 | Ship a product | will score many customers' cases repeatedly, on a schedule, inside their own product | `dg_ask` (with namespace and model_ttl_days), then `dg_ask` (by model_ref, no fit) | `datagoat-product`, `datagoat-gate` |
-| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_schedule` (or refit_of + dg_drift by hand) | `datagoat-product` |
 | Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
 <!-- /generated:other-journeys -->

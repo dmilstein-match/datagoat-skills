@@ -26,5 +26,17 @@
   {
     "prompt": "cust_0007 has two levers, contract (to_one_of one_year, two_year) and support_calls. We moved them to a one_year contract. Record it.",
     "expect": "calls dg_attest with the contract lever's own lever_token (not the support_calls token) and post_value one_year; says it counts as compliant because one_year is in to_one_of, and reports compliant, dose_fraction and lever.feature as returned"
+  },
+  {
+    "prompt": "I moved acct_0042's monthly support calls from 2 to 30 through its lever and dg_attest returned compliant true and dose_fraction 1.5556. What does that mean?",
+    "expect": "reads dose_fraction as given: above 1 means the case went past the lever's target (1 would be reaching it exactly); does not cap it at 100% or call 1.5556 an error; says it counts as acted on because compliant is true"
+  },
+  {
+    "prompt": "Before we trust this churn record, did it ever work in the past? It's the dataset_id our dg_map confirm gave us.",
+    "expect": "calls dg_backtest with data.dataset_id and subject_kind, polls the pending task with dg_poll (never re-sends it), reports decision, summary and each cutoff's state as returned beside the baseline, checks the backtest Verdict with dg_verify, and calls it history, not a track record or a call about today"
+  },
+  {
+    "prompt": "Run a backtest on our accounts table and give me the AUC.",
+    "expect": "explains a table builds no record to walk forward over (dataset_not_built): map an event log with dg_map first, or use sample:parley_record; says the backtest reports capture, lift and calibration and publishes no AUC"
   }
 ]

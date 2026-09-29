@@ -17,6 +17,18 @@
   },
   {
     "prompt": "OK, now try it on my spreadsheet.",
-    "expect": "hands over to the datagoat-ask flow: upload with dg_add_dataset (upload true for a file), then dg_suggest or dg_preflight before asking"
+    "expect": "hands over to the datagoat-ask flow: upload with dg_add_dataset (upload true for a file), then dg_map (the table alone, or logs with a table) or dg_suggest before asking; never routes to the deprecated dg_preflight"
+  },
+  {
+    "prompt": "Can it handle event logs, not just a neat table? Show me on a sample.",
+    "expect": "asks sample:parley_record with its ready-to-run ask from dg_describe (samples[].try) about today's open accounts, explains it was mapped by dg_map from two activity logs and a billing table, and quotes only numbers from the response; picks no mapping answer for the person"
+  },
+  {
+    "prompt": "We're a small company and just want a churn monitor for our own customers. Where do I go after the demo?",
+    "expect": "points to Ask your data (upload each source, then dg_map, which returns the ask) and then Run it; does not send them to Ship a product, which is for many customers of their own product"
+  },
+  {
+    "prompt": "After the demo: our account logs sit at a URL that updates weekly. How do we keep the churn answers current without redoing it by hand, and can we see how it would have done on our past first?",
+    "expect": "points to Ask your data (upload or fetch each source, dg_map, then dg_backtest for what the record's own past supported) and then Run it with dg_schedule on the mapping (its sources fetched by URL), naming refit_of and dg_drift as the manual way; does not claim a backtest is a forward track record"
   }
 ]

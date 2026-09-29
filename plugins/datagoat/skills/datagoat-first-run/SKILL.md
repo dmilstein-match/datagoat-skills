@@ -1,11 +1,12 @@
 ---
 name: datagoat-first-run
-description: '"Show me Datagoat", "what can you do", "try it on a sample", "demo it" - use when someone has no data of their own yet, or wants to see an answer and a refusal before using theirs. Walks the free samples in about five minutes - one answered question with its reasons, one question it refuses and why, the same data answering once an activity log is added, and a Verdict verified - so the person sees an answer, a refusal and a proof. Needs no card and no account beyond a free test key. For their own table, hand over to datagoat-ask.'
+description: '"Show me Datagoat", "what can you do", "try it on a sample", "demo it" - use when someone has no data of their own yet, or wants to see an answer and a refusal before using theirs. Walks the free samples in about five minutes - one answered question with its reasons, one question it refuses and why, the same data answering once an activity log is added, a record mapped from logs and a table asked about the accounts still open today, and a Verdict verified - so the person sees an answer, a refusal and a proof. Needs no card and no account beyond a free test key. For their own tables and logs, hand over to datagoat-ask.'
 ---
 
 # First run on the free samples
 
-Five minutes, four moments: an answer, a refusal, the refusal turning into an answer, and a proof.
+Five minutes, five moments: an answer, a refusal, the refusal turning into an answer, a record
+mapped from logs, and a proof.
 Every number you say comes from a response; never quote one from this page.
 
 **Rule you must never break:** never state a chance, level, reason, range or direction the
@@ -64,7 +65,17 @@ Now it answers. Say the chance, the reasons, the `pattern` (where winning is mos
 case's `pattern_match`. `quality.held_out.whole_cases_by` means accuracy was measured on whole deals
 the model never saw.
 
-## 4. A proof
+## 4. Logs and a table, mapped into one record
+
+`sample:parley_record` was built by `dg_map` from two activity logs (`sample:parley_events`,
+`sample:parley_tickets`) and a billing table (`sample:parley_billing`): each account read every 4
+weeks for whether it cancels within 90 days. Run its ready-to-run ask from `dg_describe`
+(`samples[].try`) exactly as given; it asks about today's open accounts (`cases: {open: true}`).
+Say what the answer says, as in moment 1. The mapping's own questions (which column is the
+account, which event is the cancellation) were answered when the sample was built; on the
+person's own data they are the person's to answer, never yours.
+
+## 5. A proof
 
 Take one Verdict from the answer (`answers.won.verdicts[0]`) and call `dg_verify` with its
 `verdict` and `signature` exactly as received: `valid`. Change one number in a copy and verify
@@ -73,8 +84,16 @@ again: `invalid_signature`. Anyone can do this without Datagoat: the SDKs' `veri
 
 ## Then
 
-- Their own data: the `datagoat-ask` skill (upload, `dg_suggest`, `dg_preflight`, ask).
-- A product on a schedule: `datagoat-product`. An agent that acts on answers: `datagoat-gate`.
+- Their own data: the `datagoat-ask` skill (upload each source, `dg_map`, which returns the ask;
+  `dg_backtest` on the mapped record for what its own past supported; `dg_suggest` on a plain
+  table).
+- A monitor for their own company is Ask your data, then Run it (`datagoat-product` covers the
+  running: `dg_schedule` on a mapping whose sources are fetched by URL, or outcomes, `refit_of`
+  and `dg_drift` by hand). A product on a schedule for many customers of their own product:
+  `datagoat-product`.
+- Showing someone what history supported before acting: `dg_backtest`, then Prove it
+  (`datagoat-prove`).
+- An agent that acts on answers: `datagoat-gate`.
 - Docs: https://datagoat.io/docs/quickstart
 
 <!-- generated:other-journeys (npm run docs:build, from src/core/journeys.ts) -->
@@ -82,8 +101,8 @@ again: `invalid_signature`. Anyone can do this without Datagoat: the SDKs' `veri
 
 | Journey | Fits when the user… | First call | Skill |
 |---|---|---|---|
-| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true for a file a person holds), then `dg_suggest` | `datagoat-ask` |
+| Ask your data | has a table of past cases with a yes/no outcome (churned, converted, faulted) and a question about it | `dg_add_dataset` (upload: true, one per source), then `dg_map` (returns the ask; dg_backtest and dg_ask follow; a schedule needs fetch_url sources) | `datagoat-ask` |
 | Ship a product | will score many customers' cases repeatedly, on a schedule, inside their own product | `dg_ask` (with namespace and model_ttl_days), then `dg_ask` (by model_ref, no fit) | `datagoat-product`, `datagoat-gate` |
-| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_drift` | `datagoat-product` |
+| Run it | already has a model_ref in use and is learning what happened to the cases it scored | `dg_report_outcomes`, then `dg_schedule` (or refit_of + dg_drift by hand) | `datagoat-product` |
 | Prove it | must show someone the calls were right, or measure whether acting on them worked | `dg_verify`, then `dg_track_record` (or dg_evidence, whether acting on the calls worked) | `datagoat-prove` |
 <!-- /generated:other-journeys -->
